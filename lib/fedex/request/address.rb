@@ -13,12 +13,15 @@ module Fedex
         @address[:address] ||= @address[:street]
       end
 
-      def process_request
+      def process_request(suggestions = false)
         api_response = self.class.post(api_url, :body => build_xml)
         puts api_response if @debug == true
+
         response = parse_response(api_response)
         if success?(response)
           options = response[:address_validation_reply][:address_results][:proposed_address_details]
+          options[:validation_result] = api_response
+
           options = options.first if options.is_a? Array
           Fedex::Address.new(options)
         else
